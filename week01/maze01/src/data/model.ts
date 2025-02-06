@@ -27,7 +27,6 @@ CREATE TABLE IF NOT EXISTS mazes (
 
 database.exec(initMazeTable);
 
-
 // database.exec(initDatabase);
 
 export default database;

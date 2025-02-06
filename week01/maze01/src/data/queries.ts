@@ -6,7 +6,6 @@ const createMaze = database.prepare(`
   RETURNING maze_id, created_at
 `);
 
-
 const getMazeById = database.prepare(`
   SELECT * FROM mazes WHERE maze_id = ?
 `);
@@ -19,11 +18,4 @@ const updateMaze = database.prepare(`
   UPDATE mazes SET grid = ? WHERE maze_id = ?
 `);
 
-
-
-export {
-  createMaze,
-    getMazeById,
-    getAllMazeId,
-    updateMaze
-  };
+export { createMaze, getMazeById, getAllMazeId, updateMaze };
