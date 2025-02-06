@@ -39,7 +39,7 @@ const promptMazeOpt = pipe(
     catch: () => new Error('error fetching maze options'),
   }),
   Effect.map((options) => {
-    console.log('Please choose an option:');
+    console.log('Please choose a Maze:');
     options.forEach((option, index) => {
       console.log(`${index + 1}. ${option.maze_id}`);
     });
@@ -58,8 +58,8 @@ const getSelectedModel = (maze_id: string): Effect.Effect<Maze, Error> =>
       try: () => getMazeById.get(maze_id),
       catch: () => new Error('error fetching maze model'),
     }),
-    Effect.flatMap((x) => {
-      const raw = x as RawMaze;
+    Effect.flatMap((response) => {
+      const raw = response as RawMaze;
       const maze = {
         ...raw,
         grid: JSON.parse(raw.grid),
@@ -84,7 +84,7 @@ const printCell = (row: Grid, colIndex: number) =>
     ['|'],
     (lines) => {
       row.vertical.forEach((cell, i) => {
-        lines.push(i === colIndex ? ' * ' : '   ');
+        lines.push(i === colIndex ? ' @ ' : '   ');
         lines.push(cell ? ' ' : '|');
       });
       return lines;
@@ -171,7 +171,7 @@ const move = (dx: number, dy: number) => {
     )
 };
 
-const runMenuMaze = (): Effect.Effect<Maze, Error> =>
+const runMazeMenu = (): Effect.Effect<Maze, Error> =>
   pipe(
     promptMazeOpt,
     Effect.flatMap(getSelectedModel),
@@ -181,7 +181,7 @@ const runMenuMaze = (): Effect.Effect<Maze, Error> =>
   );
 
 const createMaze = pipe(
-  runMenuMaze(),
+  runMazeMenu(),
   Effect.flatMap((maze) =>
     drawMaze(maze).pipe(
       Effect.map(({ mazeOutput }) => {
@@ -217,4 +217,4 @@ Effect.runPromise(createMaze).then((maze) => {
   activeMaze = maze;
 });
 
-export { createMaze, printTopWall, printCell, drawMaze, runMenuMaze };
+export {move,  createMaze, printTopWall, printCell, drawMaze, runMazeMenu };

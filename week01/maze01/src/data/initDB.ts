@@ -1,9 +1,10 @@
 import { createMaze, getMazeById, getAllMazeId, updateMaze } from './queries';
-import { mazeModel } from '../maze01';
+// import { mazeModel } from '../maze01';
+import { mazeModel } from '../maze03';
 // import { cons } from "effect/List";
 
 // const maze = createMaze.run(
-//     "002",
+//     "003",
 //     mazeModel.numCols,
 //     mazeModel.numRows,
 //     JSON.stringify(mazeModel.grid),
@@ -12,7 +13,7 @@ import { mazeModel } from '../maze01';
 // const maze = getMazeById.get("002");
 // const maze = getAllMazeId.all();
 
-const maze = updateMaze.run(JSON.stringify(mazeModel.grid), '001');
+const maze = updateMaze.run(JSON.stringify(mazeModel.grid), '003');
 console.log(maze);
 
 // console.log(maze.map((m) => m.maze_id));
