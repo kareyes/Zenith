@@ -5,33 +5,19 @@ import {
   MazeSchema,
   RawMaze,
 } from './types';
-import { createInterface } from 'readline/promises';
 import { getAllMazeId, getSelectedID } from './data/queries';
 import readline from 'readline';
+import { question, clear } from './utils';
 
 let currentPosition = [0, 0];
 let path = [currentPosition];
 let activeMaze: Maze;
-
-const rl = createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
 
 readline.emitKeypressEvents(process.stdin);
 
 if (process.stdin.isTTY) {
   process.stdin.setRawMode(true);
 }
-
-const question = async (query: string) => {
-  const answer = await rl.question(query);
-  return answer;
-};
-
-const clear = () => {
-  process.stdout.write('\u001b[H\u001b[2J\u001b[3J');
-};
 
 const promptMazeOpt = pipe(
   Effect.try({
@@ -78,9 +64,6 @@ const getSelectedModel = (maze_id: string): Effect.Effect<Maze, Error> =>
       
     )
 
-
-
-
 const printTopWall = (maze: Maze) => {
   const { numCols } = maze;
   let lines = [];
@@ -96,16 +79,16 @@ const printCell = (row: Grid, colIndex: number) =>
   pipe(
     ['|'],
     (lines) => {
-      row.vertical.forEach((cell, i) => {
+      row.vertical.forEach((wall, i) => {
         lines.push(i === colIndex ? ' @ ' : '   ');
-        lines.push(cell ? ' ' : '|');
+        lines.push(wall ? ' ' : '|');
       });
       return lines;
     },
     (lines) => {
       lines.push('\r\n+');
-      row.horizontal.forEach((cell) => {
-        lines.push(cell ? '   ' : '---');
+      row.horizontal.forEach((wall) => {
+        lines.push(wall ? '   ' : '---');
         lines.push('+');
       });
       lines.push('\r\n');

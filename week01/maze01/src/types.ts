@@ -19,7 +19,14 @@ const MazeSchema = Schema.Struct({
   numRows: Schema.Number,
   grid: Schema.Array(GridSchema),
   created_at: Schema.String,
-});
+}).pipe(
+  Schema.filter((maze) => maze.numCols === maze.grid[0].vertical.length),
+  Schema.filter((maze) => maze.numRows === maze.grid.length),
+  Schema.filter((maze) => maze.grid.every((row) => row.vertical.length === maze.numCols)),
+  Schema.filter((maze) => maze.grid.every((row) => row.horizontal.length === maze.numCols)),
+  Schema.filter((maze) => maze.grid.every((row) => row.vertical.length === row.horizontal.length)),
+   
+)
 type Maze = typeof MazeSchema.Type;
 
 type RawMaze = Omit<Maze, 'grid'> & { grid: string };
