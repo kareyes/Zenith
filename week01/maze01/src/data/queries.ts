@@ -22,4 +22,9 @@ const updateMazeName = database.prepare(`
   UPDATE mazes SET mazeName = ? WHERE maze_id = ?
 `);
 
-export { createMaze, getMazeById, getAllMazeId, updateMaze , updateMazeName};
+const getSelectedID = async (maze_id:string) => await database.prepare(`
+  SELECT * FROM mazes WHERE maze_id = ?
+`).get(maze_id);
+
+
+export { createMaze, getMazeById, getAllMazeId, updateMaze , updateMazeName, getSelectedID};

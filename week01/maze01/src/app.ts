@@ -6,7 +6,7 @@ import {
   RawMaze,
 } from './types';
 import { createInterface } from 'readline/promises';
-import { getAllMazeId, getMazeById } from './data/queries';
+import { getAllMazeId, getSelectedID } from './data/queries';
 import readline from 'readline';
 
 let currentPosition = [0, 0];
@@ -35,13 +35,13 @@ const clear = () => {
 
 const promptMazeOpt = pipe(
   Effect.try({
-    try: () => getAllMazeId.all() as { maze_id: string }[],
+    try: () => getAllMazeId.all() as Maze[],
     catch: () => new Error('error fetching maze options'),
   }),
   Effect.map((options) => {
     console.log('Please choose a Maze:');
     options.forEach((option, index) => {
-      console.log(`${index + 1}. ${option.maze_id}`);
+      console.log(`${index + 1}. ${option.mazeName}`);
     });
     return options;
   }),
@@ -53,20 +53,33 @@ const promptMazeOpt = pipe(
 );
 
 const getSelectedModel = (maze_id: string): Effect.Effect<Maze, Error> =>
-  pipe(
-    Effect.try({
-      try: () => getMazeById.get(maze_id),
-      catch: () => new Error('error fetching maze model'),
-    }),
-    Effect.flatMap((response) => {
-      const raw = response as RawMaze;
-      const maze = {
-        ...raw,
-        grid: JSON.parse(raw.grid),
-      };
-      return Effect.succeed(maze);
-    }),
-  );
+    pipe(
+      Effect.promise(() => getSelectedID(maze_id)).pipe(
+          Effect.flatMap((response: any) => {
+            console.log("scu", response);
+              if (response) {
+                const raw = response as RawMaze;
+                const maze = {
+                  ...raw,
+                  grid: JSON.parse(raw.grid),
+                };
+                return Effect.succeed(maze);
+              } else {
+                return Effect.fail(new Error("error fetching maze by id"));
+              }
+          }),
+          Effect.catchAll((err) => {
+              console.log("err", err);
+              return Effect.fail(err);
+          }
+
+        )
+      )
+      
+    )
+
+
+
 
 const printTopWall = (maze: Maze) => {
   const { numCols } = maze;
@@ -165,11 +178,23 @@ const move = (dx: number, dy: number) => {
         }),
         Effect.flatMap(() => drawMaze(activeMaze, currentPosition)),
         Effect.map(({ mazeOutput }) => console.log(mazeOutput)),
-        Effect.map(() => console.log('Current position:', currentPosition)),
+        Effect.map(() => finalizePosition(currentPosition)),
         Effect.catchAll((err) => Console.log(err)),
         Effect.runPromise
     )
 };
+
+const finalizePosition = (currentPosition: number[]) => {
+  const [x, y] = currentPosition;
+  const { numRows, numCols } = activeMaze;
+  const isEnd = x === numRows - 1 && y === numCols - 1;
+  if (isEnd) {
+    console.log('Congratulations! You have reached the end of the maze.');
+    process.exit();
+  } else {
+    console.log('Current position:', currentPosition);
+  }
+}
 
 const runMazeMenu = (): Effect.Effect<Maze, Error> =>
   pipe(
