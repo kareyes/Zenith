@@ -24,6 +24,7 @@ export const grid = [
 
 export const mazeModel = {
   maze_id: "001",
+  mazeName: "Maze 1 - 5x5" ,
   numCols: 5,
   numRows: 5,
   grid: grid,

@@ -14,6 +14,7 @@ type Grid = typeof GridSchema.Type;
 
 const MazeSchema = Schema.Struct({
   maze_id: Schema.String,
+  mazeName: Schema.String,
   numCols: Schema.Number,
   numRows: Schema.Number,
   grid: Schema.Array(GridSchema),

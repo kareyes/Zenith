@@ -189,6 +189,7 @@
   
   export const mazeModel = {
     maze_id: "002",
+    mazeName: "Maze 2 - 10x10",
     numCols: 10,
     numRows: 10,
     grid: grid,
