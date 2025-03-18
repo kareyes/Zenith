@@ -1,6 +1,6 @@
 import { Effect } from 'effect';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createMaze, move } from './app';
+import { createMaze, move } from './bin/app';
 // import { getAllMazeId, getMazeById } from './data/queries';
 
 describe('Application Tests', () => {

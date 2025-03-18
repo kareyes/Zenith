@@ -3,11 +3,11 @@ import {
   type Maze,
   type Grid,
   MazeSchema,
-  RawMaze,
-} from './types';
-import { getAllMazeId, getSelectedID } from './data/queries';
+  ResponseMaze,
+} from '../types';
+import { getAllMazeId, getSelectedID } from '../data/queries';
 import readline from 'readline';
-import { question, clear } from './utils';
+import { question, clear } from '../utils';
 
 let currentPosition = [0, 0];
 let path = [currentPosition];
@@ -44,7 +44,7 @@ const getSelectedModel = (maze_id: string): Effect.Effect<Maze, Error> =>
           Effect.flatMap((response: any) => {
             console.log("scu", response);
               if (response) {
-                const raw = response as RawMaze;
+                const raw = response as ResponseMaze;
                 const maze = {
                   ...raw,
                   grid: JSON.parse(raw.grid),
@@ -124,6 +124,51 @@ const drawMaze = (maze: Maze, currentPosition?: number[]) =>
     )
   );
 
+  // const autoMove = () => {
+  //   const directions = [
+  //     { dx: 0, dy: 1 },  // right
+  //     { dx: 1, dy: 0 },  // down
+  //     { dx: 0, dy: -1 }, // left
+  //     { dx: -1, dy: 0 }, // up
+  //   ];
+
+  //   const visited = new Set<string>();
+  //   visited.add(currentPosition.toString());
+
+  //   const moveRandomly = (): Effect.Effect<void, Error> => 
+  //     pipe(
+  //       Effect.sync(() => {
+  //         const possibleDirections = directions.filter(({ dx, dy }) => {
+  //           const [nx, ny] = [currentPosition[0] + dx, currentPosition[1] + dy];
+  //           return !visited.has([nx, ny].toString());
+  //         });
+
+  //         if (possibleDirections.length === 0) {
+  //           return Effect.fail(new Error('No possible directions'));
+  //         }
+
+  //         const randomDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
+  //         return randomDirection;
+  //       }),
+  //       Effect.flatMap(({ dx, dy }) => 
+  //         pipe(
+  //           Effect.sync(() => move(dx, dy)),
+  //           Effect.map(() => {
+  //             visited.add(currentPosition.toString());
+  //           })
+  //         )
+  //       )
+  //     );
+
+  //   const intervalId = setInterval(() => {
+  //     Effect.runPromise(moveRandomly()).catch((err) => console.error(err));
+  //     const [x, y] = currentPosition;
+  //     const { numRows, numCols } = activeMaze;
+  //     if (x === numRows - 1 && y === numCols - 1) {
+  //       clearInterval(intervalId);
+  //     }
+  //   }, 100);
+  // };
 
 const move = (dx: number, dy: number) => {
     const [x, y] = currentPosition;
@@ -131,7 +176,7 @@ const move = (dx: number, dy: number) => {
     const ny = y + dy;
     const { grid, numCols, numRows } = activeMaze;
 
-    pipe(
+    const t = pipe(
         Effect.sync(() => console.log('Current position:', currentPosition)),
         Effect.map(() => {
             if (nx < 0 || ny < 0 || nx >= numRows || ny >= numCols) {
@@ -163,9 +208,10 @@ const move = (dx: number, dy: number) => {
         Effect.map(({ mazeOutput }) => console.log(mazeOutput)),
         Effect.map(() => finalizePosition(currentPosition)),
         Effect.catchAll((err) => Console.log(err)),
-        Effect.runPromise
+        // Effect.runSync
     )
 };
+
 
 const finalizePosition = (currentPosition: number[]) => {
   const [x, y] = currentPosition;
@@ -223,6 +269,7 @@ process.stdin.on('keypress', (_, key) => {
 
 Effect.runPromise(createMaze).then((maze) => {
   activeMaze = maze;
+  // autoMove();
 });
 
 export {move,  createMaze, printTopWall, printCell, drawMaze, runMazeMenu };

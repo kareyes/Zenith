@@ -1,8 +1,6 @@
-import { Effect, Fiber, Layer, pipe, Schema, Stream } from 'effect';
+import { Effect,  pipe, Schema } from 'effect';
 import { GamePlay, PlayMovement, PlayMovementSchema } from './types';
 import { GamePlayError } from './constant';
-
-
 
   const OutofBounds = (m: PlayMovement) =>
     pipe(
