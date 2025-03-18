@@ -26,5 +26,9 @@ const getSelectedID = async (maze_id:string) => await database.prepare(`
   SELECT * FROM mazes WHERE maze_id = ?
 `).get(maze_id);
 
+const getAllMazeIds = async () => await database.prepare(`
+  SELECT maze_id, mazeName, created_at FROM mazes
+`).all();
 
-export { createMaze, getMazeById, getAllMazeId, updateMaze , updateMazeName, getSelectedID};
+
+export { createMaze, getMazeById, getAllMazeId, updateMaze , updateMazeName, getSelectedID, getAllMazeIds};

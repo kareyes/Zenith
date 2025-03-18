@@ -5,7 +5,7 @@
   "scripts": {
     "test": "npx vitest",
     "exec": "node app.ts",
-    "start": "npx tsx src/app.ts",
+    "start": "npx tsx src/main.ts",
     "format": "prettier --write ."
   },
   "keywords": [],
@@ -20,7 +20,9 @@
     "vitest": "^3.0.5"
   },
   "dependencies": {
+    "@effect/platform": "^0.79.1",
     "@effect/schema": "^0.75.5",
+    "@inquirer/prompts": "^7.3.2",
     "effect": "^3.12.6"
   }
 }

@@ -10,9 +10,9 @@ const question = async (query: string) => {
     return answer;
   };
   
-  const clear = () => {
-    process.stdout.write('\u001b[H\u001b[2J\u001b[3J');
-  };
+const clear = () => {
+  process.stdout.write('\u001b[H\u001b[2J\u001b[3J');
+};
 
 
   export { question, clear };

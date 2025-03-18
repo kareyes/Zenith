@@ -1,6 +1,6 @@
 import { createMaze, getMazeById, getAllMazeId, updateMaze , updateMazeName} from './queries';
 // import { mazeModel } from '../maze01';
-import { mazeModel } from '../maze03';
+import { mazeModel } from './maze03';
 // import { mazeModel } from '../maze02';
 // import { cons } from "effect/List";
 

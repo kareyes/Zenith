@@ -1,56 +1,90 @@
-import { Data, Schema, Effect, Cause } from 'effect';
+import { Data, Schema, Effect, Cause, Context, Ref } from 'effect';
 
-const CellSchema = Schema.Boolean;
-type Cell = typeof CellSchema.Type;
+export const CellSchema = Schema.Boolean;
+export type Cell = typeof CellSchema.Type;
 
-const RowSchema = Schema.Array(CellSchema);
-type Row = typeof RowSchema.Type;
+export const RowSchema = Schema.Array(CellSchema);
+export type Row = typeof RowSchema.Type;
 
-const GridSchema = Schema.Struct({
+export const GridSchema = Schema.Struct({
   vertical: RowSchema,
   horizontal: RowSchema,
 });
-type Grid = typeof GridSchema.Type;
+export type Grid = typeof GridSchema.Type;
 
-const MazeSchema = Schema.Struct({
+export const MazeMetaSchema = Schema.Struct({
   maze_id: Schema.String,
   mazeName: Schema.String,
+  created_at: Schema.String,
+});
+
+export const MetaArraySchema = Schema.Array(MazeMetaSchema);
+
+export type MazeMetaArray = typeof MetaArraySchema.Type;
+export type MazeMeta = typeof MazeMetaSchema.Type;
+
+export const MazeSchema = Schema.Struct({
+  ...MazeMetaSchema.fields,
   numCols: Schema.Number,
   numRows: Schema.Number,
   grid: Schema.Array(GridSchema),
-  created_at: Schema.String,
-}).pipe(
-  Schema.filter((maze) => maze.numCols === maze.grid[0].vertical.length),
-  Schema.filter((maze) => maze.numRows === maze.grid.length),
-  Schema.filter((maze) => maze.grid.every((row) => row.vertical.length === maze.numCols)),
-  Schema.filter((maze) => maze.grid.every((row) => row.horizontal.length === maze.numCols)),
-  Schema.filter((maze) => maze.grid.every((row) => row.vertical.length === row.horizontal.length)),
-   
-)
-type Maze = typeof MazeSchema.Type;
+});
 
-type RawMaze = Omit<Maze, 'grid'> & { grid: string };
 
-type PrintMaze = {
-  gird: Grid[];
-  lines: string[];
-};
+export const ResponseMazeSchema = MazeSchema.omit('grid').pipe(
+  Schema.extend(Schema.Struct({ grid: Schema.String }))
+);
 
-// export class MazeError extends Data.TaggedError("MazeError") {}
+export type ResponseMaze = typeof ResponseMazeSchema.Type;
 
-// class MazeError extends Error {
-//     constructor(message: string, public cause?: Effect.Cause<unknown>) {
-//         super(message);
-//         this.name = "MazeError";
-//     }
+export const ParseMazeSchema = Schema.transform(
+  ResponseMazeSchema,
+  MazeSchema,
+  {
+    encode: (maze) => ({
+      ...maze,
+      grid: JSON.stringify(maze.grid),
+    }),
+    decode: (rawMaze) => ({
+      ...rawMaze,
+      grid: JSON.parse(rawMaze.grid),
+    }),
+  },
+);
 
-//     static fromEffect<E>(effect: Effect.Effect<unknown, E, unknown>): Effect.Effect<unknown, MazeError, unknown> {
-//         return effect.mapError((error) => new MazeError("Maze operation failed", Cause.fail(error)));
-//     }
-// }
+export type Maze = typeof ParseMazeSchema.Type;
 
-// export { MazeError }
+export const CurrentPositionSchema = Schema.Struct({
+  x: Schema.Number,
+  y: Schema.Number,
+});
 
-export { CellSchema, RowSchema, GridSchema, MazeSchema };
+export const GamePlaySchema = Schema.Struct({
+  maze: MazeSchema,
+  currentPosition: CurrentPositionSchema,
+  playerMoves: CurrentPositionSchema,
+});
 
-export type { Cell, Row, Grid, Maze, PrintMaze, RawMaze };
+export const PlayMovementSchema = Schema.Struct({
+  dx: Schema.Number,
+  dy: Schema.Number,
+  currentX: Schema.Number,
+  currentY: Schema.Number,
+  maze: MazeSchema,
+
+});
+
+export type GameState = {
+  maze: Ref.Ref<Maze>,
+  currentPosition: Ref.Ref<CurrentPosition>,
+}
+
+export type GamePlayState = GameState & {
+  playerMoves: CurrentPosition,
+}
+ 
+export type PlayMovement = typeof PlayMovementSchema.Type;
+
+export type GamePlay = typeof GamePlaySchema.Type;
+
+export type CurrentPosition = typeof CurrentPositionSchema.Type;
