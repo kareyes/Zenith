@@ -45,6 +45,14 @@ export class CurrentPositionState extends Context.Tag('CurrentPositionState')<
   Ref.Ref<CurrentPosition>
 >() {}
 
+
+export const directions: CurrentPosition[] = [
+  { x: 0, y: 1 },  // right
+  { x: 1, y: 0 },  // down
+  { x: 0, y: -1 }, // left
+  { x: -1, y: 0 }, // up
+];
+
 export const mockMaze: Maze = {
   maze_id: '1',
   mazeName: 'Test Maze',

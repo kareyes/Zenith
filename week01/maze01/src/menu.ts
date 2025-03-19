@@ -1,12 +1,11 @@
 import { select, input } from '@inquirer/prompts';
-import { Chunk, Effect, Option, pipe, Ref } from 'effect';
+import { Effect, pipe, Ref } from 'effect';
 import {
   DBMazeClientService,
   getAllMazeId,
-  getCurrentPositionState,
   getMazeById,
 } from './service';
-import { CurrentPositionState, MazeState, PlayerState } from './constant';
+import { PlayerState } from './constant';
 import readline from 'readline';
 import { move } from './maze';
 import { CurrentPosition, GameState } from './types';
@@ -66,19 +65,15 @@ export const listener = (state: GameState) =>
             switch (key.name) {
               case 'up':
                 playerMoves = { x: -1, y: 0 };
-                console.log('up');
                 break;
               case 'down':
                 playerMoves = { x: 1, y: 0 };
-                console.log('down');
                 break;
               case 'left':
                 playerMoves = { x: 0, y: -1 };
-                console.log('left');
                 break;
               case 'right':
                 playerMoves = { x: 0, y: 1 };
-                console.log('right');
                 break;
             }
             move({ playerMoves, ...state });

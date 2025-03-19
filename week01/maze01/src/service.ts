@@ -29,34 +29,6 @@ export const DBMazeClientLive = {
     ),
 };
 
-// export class CurrentPositionState1 extends Effect.Service<CurrentPositionState>()(
-//   'CurrentPositionState',
-//   {
-//     effect: Effect.gen(function* () {
-//       return Ref.make({ x: 0, y: 0 });
-//     }),
-//   },
-// ) {}
-
-// export class CurrentPosService extends Effect.Service<CurrentPosService>()(
-//   "CurrentPosService",
-//   {
-//     effect: Effect.gen(function* () {
-//       const state = yield* CurrentPositionState1;
-//       return {
-//         getCurrentPositionState: (Ref.get(state)),
-//         setCurrentPositionState: (position: CurrentPosition) =>
-//           pipe(
-//             CurrentPositionState,
-//             Effect.flatMap((state) => Ref.update(state, () => position)),
-//           ),  
-//       }
-//       ;
-//     }),
-//     dependencies: { CurrentPositionState1. },
-//   }
-
-// ) {}
 
 
 
