@@ -1,4 +1,4 @@
-import { Duration, Effect, pipe, Ref, Schedule, Schema } from 'effect';
+import { Effect, pipe, Ref, Schedule, Schema } from 'effect';
 import { GamePlay, GameState, PlayMovement, PlayMovementSchema } from './types';
 import { directions, GamePlayError } from './constant';
 import { move } from './maze';
@@ -166,7 +166,6 @@ const checkFinalPosition = (state: GameState) =>
     Effect.flatMap((status) => status),
     Effect.catchTag('GamePlayError', (err) => Effect.succeed(err)),
   );
-
 
 export const runAutoMove = (state: GameState) =>
   Effect.repeat(autoMove(state), {

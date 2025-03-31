@@ -5,6 +5,9 @@
 // import { E } from 'vitest/dist/chunks/reporters.6vxQttCV';
 // import { run } from 'effect/Schedule';
 
+import { Effect, pipe, Schedule } from "effect";
+import { MazeAPI } from "../apiServices";
+
 // import { Console, Context, Effect, pipe, Ref, Schema } from "effect";
 // import { CurrentPosition, GridSchema, Maze } from "./types";
 // import { cons } from "effect/List";
@@ -500,4 +503,100 @@
 // } )
 
 // Effect.runPromise(prog)
+// let count = 0
 
+// const policy = Schedule.addDelay(Schedule.forever, () => "100 millis")
+
+// const action = Effect.sync(() => {
+//   console.log(`Action called ${++count} time(s)`)
+//   return count
+// })
+
+// const program = Effect.repeat(action, {
+//   until:(n) => n >= 5,
+//   schedule: policy,
+// })
+
+// Effect.runFork(program)
+
+// Example function to insert symbols using character codes
+// function insertSymbolUsingCharCode(charCode: number): string {
+//   return String.fromCharCode(charCode);
+// }
+
+// // Example usage with Wingdings font character codes
+// const symbol = insertSymbolUsingCharCode(74); // 'J' in Wingdings font
+// console.log(symbol); // Output: 'J'
+
+// // Example function to insert symbols using Unicode escape sequences
+// function insertSymbolUsingUnicodeEscapeSequence(unicodeEscapeSequence: string): string {
+//   return unicodeEscapeSequence;
+// } 
+//  console.log(insertSymbolUsingUnicodeEscapeSequence('\u{1F600}')); // Output: 😁
+
+// // Example usage with Unicode escape sequences
+// const symbol1 = insertSymbolUsingUnicodeEscapeSequence('\u{1F600}'); // 
+// //  😁
+// console.log(symbol1); // Output: 
+// //  😁
+// const symbols = [
+//   { name: 'Grinning Face', code: '\u{1F600}', output: '😁' },
+//   { name: 'Thumbs Up', code: '\u{1F44D}', output: '👍' },
+//   { name: 'Red Heart', code: '\u{2764}', output: '❤' },
+//   { name: 'Star', code: '\u{2B50}', output: '⭐' },
+//   { name: 'Check Mark', code: '\u{2714}', output: '✔' },
+// ];
+
+// // Display the symbols
+ 
+
+// symbols.forEach(symbol => {
+//   console.log(`${symbol.name}: ${symbol.code} -> ${symbol.output}`);
+// });
+// const animalSymbols = [
+//   { name: 'Dog Face', code: '\u{1F436}', output: '🐶' },
+//   { name: 'Cat Face', code: '\u{1F431}', output: '🐱' },
+//   { name: 'Mouse Face', code: '\u{1F42D}', output: '🐭' },
+//   { name: 'Cow Face', code: '\u{1F42E}', output: '🐮' },
+//   { name: 'Tiger Face', code: '\u{1F42F}', output: '🐯' },
+//   { name: 'Rabbit Face', code: '\u{1F430}', output: '🐰' },
+//   { name: 'Fox Face', code: '\u{1F98A}', output: '🦊' },
+//   { name: 'Bear Face', code: '\u{1F43B}', output: '🐻' },
+//   { name: 'Panda Face', code: '\u{1F43C}', output: '🐼' },
+//   { name: 'Koala Face', code: '\u{1F428}', output: '🐨' },
+// ];
+
+// animalSymbols.forEach(symbol => {
+//   console.log(`${symbol.name}: ${symbol.code} -> ${symbol.output}`);
+// });
+
+
+// const celebrationSymbols = [
+//   { name: 'Party Popper', code: '\u{1F389}', output: '🎉' },
+//   { name: 'Confetti Ball', code: '\u{1F38A}', output: '🎊' },
+//   { name: 'Tada', code: '\u{1F64C}', output: '🙌' },
+//   { name: 'Clapping Hands', code: '\u{1F44F}', output: '👏' },
+//   { name: 'Balloon', code: '\u{1F388}', output: '🎈' },
+//   { name: 'Fireworks', code: '\u{1F386}', output: '🎆' },
+//   { name: 'Sparkler', code: '\u{1F387}', output: '🎇' },
+//   { name: 'Sparkles', code: '\u{2728}', output: '✨' },
+//   { name: 'Crown', code: '\u{1F451}', output: '👑' },
+//   { name: 'Trophy', code: '\u{1F3C6}', output: '🏆' },
+// ];
+
+// celebrationSymbols.forEach(symbol => {
+//   console.log(`${symbol.name}: ${symbol.code} -> ${symbol.output}`);
+// });
+const jsonResponse = (response: Response) =>
+  Effect.tryPromise(() => response.json());
+
+const maze = pipe(
+  Effect.gen(function* () {
+    const maze = yield* MazeAPI
+    const mazeId = yield* maze.getAllMaze() 
+    console.log(mazeId)
+  }),
+  Effect.provide(MazeAPI.Default)
+)
+
+Effect.runPromise(maze).then(console.log).catch(console.error)

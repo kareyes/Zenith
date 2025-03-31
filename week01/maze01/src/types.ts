@@ -1,4 +1,5 @@
 import { Data, Schema, Effect, Cause, Context, Ref } from 'effect';
+import test from 'node:test';
 
 export const CellSchema = Schema.Boolean;
 export type Cell = typeof CellSchema.Type;
@@ -82,9 +83,12 @@ export type GameState = {
 export type GamePlayState = GameState & {
   playerMoves: CurrentPosition,
 }
+
  
 export type PlayMovement = typeof PlayMovementSchema.Type;
 
 export type GamePlay = typeof GamePlaySchema.Type;
 
 export type CurrentPosition = typeof CurrentPositionSchema.Type;
+
+

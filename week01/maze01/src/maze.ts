@@ -1,6 +1,6 @@
 import { Effect, pipe, Ref } from 'effect';
-import { CurrentPositionState, MazeState } from './constant';
-import { BuildMazeApi } from './cell';
+import { CurrentPositionState, MazeState, PlayerModeState } from './constant';
+import { BuildMazeApi } from './builder';
 import { CurrentPosition, GamePlayState, GameState, Grid } from './types';
 import { listener } from './menu';
 import { runAutoMove, validateMovement } from './gameplay';
@@ -63,7 +63,6 @@ export const move = ({ currentPosition, maze, playerMoves }: GamePlayState) =>
     ),
     Effect.flatMap(() => drawMaze({ currentPosition, maze })),
     Effect.tap(() => finalizePosition({ currentPosition, maze })),
-    // Effect.map((status) => status),
     Effect.catchTag('GamePlayError', (err) => Effect.succeed(err)),
     Effect.runPromise,
   );
@@ -78,14 +77,11 @@ const finalizePosition = (state: GameState) =>
         position.x === mazeState.numRows - 1 &&
         position.y === mazeState.numCols - 1
       ) {
-        console.log('Congratulations! You have reached the end of the maze.');
+        console.log('Congratulations \u{1F389} \u{1F389} \u{1F389}! You have reached the end of the maze.');
         process.exit();
       }
     }),
-    // Effect.map(() => "game over"),
-    //  Effect.runPromise,
   );
-
 
 
 const drawMaze = (state: GameState) =>
@@ -95,7 +91,7 @@ const drawMaze = (state: GameState) =>
     Effect.tap(() => clear()),
     Effect.bind('layout', () => builder),
     Effect.tap(({ layout }) => console.log(layout.join(''))),
-    Effect.tap(({ position }) => console.log('current position', position)),
+    // Effect.tap(({ position }) => console.log('current position', position)),
     Effect.provideServiceEffect(MazeState, Effect.succeed(state.maze)),
     Effect.provideServiceEffect(
       CurrentPositionState,
@@ -104,14 +100,18 @@ const drawMaze = (state: GameState) =>
     Effect.provideService(BuildMazeApi, BuildMazeApi.Live),
   );
 
-export const mazeInit = Effect.gen(function* () {
-  const currentPosition = yield* CurrentPositionState;
-  const maze = yield* MazeState;
-
-  yield* drawMaze({ maze, currentPosition });
-
-  // listener({ maze, currentPosition }).pipe(Effect.runPromise);
-  runAutoMove({ maze, currentPosition }).pipe(Effect.runPromise);
-});
+export const initializeMaze = pipe(
+  CurrentPositionState,
+  Effect.bind('currentPosition', () => CurrentPositionState),
+  Effect.bind('maze', () => MazeState),
+  Effect.bind('playerMode', () => PlayerModeState),
+  Effect.bind('mode', ({ playerMode }) => Ref.get(playerMode)),
+  Effect.tap(({ currentPosition, maze }) => drawMaze({ maze, currentPosition })),
+  Effect.tap(({ mode, currentPosition, maze }) =>
+    mode === 'Auto'
+      ? runAutoMove({ maze, currentPosition }).pipe(Effect.runPromise)
+      : listener({ maze, currentPosition }).pipe(Effect.runPromise),
+  ),
+);
 
 

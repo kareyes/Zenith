@@ -12,7 +12,7 @@ const builder = {
             const numCols = currentMaze.numCols;
             return (
                 Array.from({ length: numCols * 2 + 1 }, (_, i) =>
-                    i === 1 ? '   ' : i % 2 === 0 ? '+' : '---',
+                    i === 1 ? '    ' : i % 2 === 0 ? '+' : '----',
                 ).join('') + '\r\n'
             );
         })
@@ -24,13 +24,14 @@ const builder = {
             Effect.map(vertical => {
                 let lines: string[] = [];
                 vertical.forEach((wall, i) => {
-                    lines.push(i === currentPosition ? ' @ ' : '   ');
-                    lines.push(wall ? ' ' : '|');
+                    lines = [...lines, i === currentPosition ? ' \u{1F42D} ' : '    '];
+                    lines = [...lines, wall ? ' ' : '|'];
                 });
                 return lines;
             })
         ),
 
+        
     buildHorizRow: (horizontal: Row) =>
         pipe(
             Effect.succeed(horizontal),
@@ -38,7 +39,7 @@ const builder = {
                 let lines: string[] = [];
                 lines = [...lines, '\r\n+'];
                 horizontal.forEach((wall, i) => {
-                    lines = [...lines, wall ? '   ' : '---'];
+                    lines = [...lines, wall ? '    ' : '----'];
                     lines = [...lines, '+'];
                 });
                 lines = [...lines, '\r\n'];
@@ -53,3 +54,5 @@ export class BuildMazeApi extends Context.Tag('BuildMazeApi')<
 >() {
   static readonly Live = BuildMazeApi.of(builder);
 }
+
+

@@ -1,51 +1,62 @@
 import { select, input } from '@inquirer/prompts';
 import { Effect, pipe, Ref } from 'effect';
-import {
-  DBMazeClientService,
-  getAllMazeId,
-  getMazeById,
-} from './service';
-import { PlayerState } from './constant';
+// import {
+//   DBMazeClientService,
+//   getAllMazeId,
+//   getMazeById,
+// } from './service';
 import readline from 'readline';
 import { move } from './maze';
 import { CurrentPosition, GameState } from './types';
+import { MazeAPI } from './apiServices';
 
-const initialStatePlayer = (value: string) =>
-  pipe(
-    Ref.make(value),
-    Effect.flatMap((value: Ref.Ref<string>) =>
-      Effect.sync(() => new PlayerState(value)),
-    ),
+
+// export const runMazeMenu = pipe(
+//   Effect.sync(() => console.log('Welcome to the game')),
+//   Effect.flatMap(() =>
+//     Effect.promise(() =>
+//       input({
+//         message: "Enter the player's name",
+//         validate: (name) => (name ? true : 'Please enter a valid name'),
+//       }),
+//     ),
+//   ),
+//   Effect.tap((answer) => console.log('Hello Challenger', answer)),
+//   Effect.andThen(() => getAllMazeId()),
+//   Effect.flatMap((maze) =>
+//     Effect.promise(() =>
+//       select({
+//         message: 'Please choose Maze Level',
+//         choices: maze.map((m) => ({
+//           name: m.mazeName,
+//           value: m.maze_id,
+//           description: m.created_at,
+//         })),
+//       }),
+//     ),
+//   ),
+//   Effect.andThen((selected) => getMazeById(selected)),
+//   Effect.map((selected) => selected),
+//   DBMazeClientService,
+// );
+
+export const getMaze = Effect.gen(function* () {
+  const mazeAPI = yield* MazeAPI;
+  const maze = yield* mazeAPI.getAllMaze();
+  const selected = yield* Effect.promise(() =>
+    select({
+      message: 'Please choose Maze Level',
+      choices: maze.map((m) => ({
+        name: m.mazeName,
+        value: m.maze_id,
+        description: m.created_at,
+      })),
+    }),
   );
+  const mazeById = yield* mazeAPI.getMazeById(selected);
+  return mazeById;
+}).pipe(Effect.provide(MazeAPI.Default));
 
-export const runMazeMenu = pipe(
-  Effect.sync(() => console.log('Welcome to the game')),
-  Effect.flatMap(() =>
-    Effect.promise(() =>
-      input({
-        message: "Enter the player's name",
-        validate: (name) => (name ? true : 'Please enter a valid name'),
-      }),
-    ),
-  ),
-  Effect.tap((answer) => console.log('Hello Challenger', answer)),
-  Effect.andThen(() => getAllMazeId()),
-  Effect.flatMap((maze) =>
-    Effect.promise(() =>
-      select({
-        message: 'Please choose Maze Level',
-        choices: maze.map((m) => ({
-          name: m.mazeName,
-          value: m.maze_id,
-          description: m.created_at,
-        })),
-      }),
-    ),
-  ),
-  Effect.andThen((selected) => getMazeById(selected)),
-  Effect.map((selected) => selected),
-  DBMazeClientService,
-);
 
 
 export const listener = (state: GameState) =>
@@ -83,13 +94,13 @@ export const listener = (state: GameState) =>
     ),
   );
 
-// export const runPlayerMode = pipe(
-//   Effect.promise(() =>
-//     select({
-//       message: 'Choose a player mode',
-//       choices: ['Auto', 'Manual'],
-//     }),
-//   ),
-//   Effect.tap((player) => listener()),
+export const runPlayerModeMenu = pipe(
+  Effect.promise(() =>
+    select({
+      message: 'Choose a player mode',
+      choices: ['Auto', 'Manual'],
+    }),
+  ),
+  Effect.map((selected) => selected as string),
 
-// );
+);
