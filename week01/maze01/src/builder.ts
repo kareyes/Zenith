@@ -1,15 +1,14 @@
 import { Context, Effect, Ref } from 'effect';
-import { MazeState } from './constant';
+import { MazeDataState } from './constant';
 import { Row } from './types';
 import { pipe } from 'effect';
 
-
 const builder = {
     buildTopWall: pipe(
-        MazeState,
+        MazeDataState,
         Effect.flatMap(state => Ref.get(state)),
-        Effect.map(currentMaze => {
-            const numCols = currentMaze.numCols;
+        Effect.map((currentMaze) => {
+            const numCols = currentMaze.maze.numCols;
             return (
                 Array.from({ length: numCols * 2 + 1 }, (_, i) =>
                     i === 1 ? '    ' : i % 2 === 0 ? '+' : '----',
@@ -18,13 +17,13 @@ const builder = {
         })
     ),
 
-    buildVerticalRow: (vertical: Row, currentPosition: number) =>
+    buildVerticalRow: (vertical: Row, currentPosition: number, player:string) =>
         pipe(
             Effect.succeed(vertical),
             Effect.map(vertical => {
                 let lines: string[] = [];
                 vertical.forEach((wall, i) => {
-                    lines = [...lines, i === currentPosition ? ' \u{1F42D} ' : '    '];
+                    lines = [...lines, i === currentPosition ? ` ${player} ` : '    '];
                     lines = [...lines, wall ? ' ' : '|'];
                 });
                 return lines;
@@ -48,11 +47,11 @@ const builder = {
         ),
 };
 
-export class BuildMazeApi extends Context.Tag('BuildMazeApi')<
-  BuildMazeApi,
+export class BuilderMaze extends Context.Tag('BuilderMaze')<
+BuilderMaze,
   typeof builder
 >() {
-  static readonly Live = BuildMazeApi.of(builder);
+  static readonly Live = BuilderMaze.of(builder);
 }
 
 

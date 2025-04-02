@@ -1,5 +1,5 @@
 import { Effect, Schema } from 'effect';
-import { DatabaseService } from '..';
+import { DatabaseService } from './dbService';
 import { SELECT_METADATA, SELECTED_MAZE } from '../constant';
 import {
   MazeMetaArray,

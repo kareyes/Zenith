@@ -1,51 +1,16 @@
-import { select, input } from '@inquirer/prompts';
-import { Effect, pipe, Ref } from 'effect';
-// import {
-//   DBMazeClientService,
-//   getAllMazeId,
-//   getMazeById,
-// } from './service';
-import readline from 'readline';
-import { move } from './maze';
-import { CurrentPosition, GameState } from './types';
+import { select } from '@inquirer/prompts';
+import { Effect, pipe, Ref, Schema } from 'effect';
 import { MazeAPI } from './apiServices';
+import { MazeDataState, playerSymbols } from './constant';
+import { MazeGameDataSchema } from './types';
 
-
-// export const runMazeMenu = pipe(
-//   Effect.sync(() => console.log('Welcome to the game')),
-//   Effect.flatMap(() =>
-//     Effect.promise(() =>
-//       input({
-//         message: "Enter the player's name",
-//         validate: (name) => (name ? true : 'Please enter a valid name'),
-//       }),
-//     ),
-//   ),
-//   Effect.tap((answer) => console.log('Hello Challenger', answer)),
-//   Effect.andThen(() => getAllMazeId()),
-//   Effect.flatMap((maze) =>
-//     Effect.promise(() =>
-//       select({
-//         message: 'Please choose Maze Level',
-//         choices: maze.map((m) => ({
-//           name: m.mazeName,
-//           value: m.maze_id,
-//           description: m.created_at,
-//         })),
-//       }),
-//     ),
-//   ),
-//   Effect.andThen((selected) => getMazeById(selected)),
-//   Effect.map((selected) => selected),
-//   DBMazeClientService,
-// );
 
 export const getMaze = Effect.gen(function* () {
   const mazeAPI = yield* MazeAPI;
   const maze = yield* mazeAPI.getAllMaze();
   const selected = yield* Effect.promise(() =>
     select({
-      message: 'Please choose Maze Level',
+      message: 'Choose your labyrinth tier:',
       choices: maze.map((m) => ({
         name: m.mazeName,
         value: m.maze_id,
@@ -57,50 +22,45 @@ export const getMaze = Effect.gen(function* () {
   return mazeById;
 }).pipe(Effect.provide(MazeAPI.Default));
 
-
-
-export const listener = (state: GameState) =>
-  pipe(
-    Effect.sync(() => {
-      readline.emitKeypressEvents(process.stdin);
-      process.stdin.setRawMode(true);
-      process.stdin.resume();
+export const selectPlayerCharacter = Effect.gen(function* () {
+  const selected = yield* Effect.promise(() =>
+    select({
+      message: 'Select your player character:',
+      choices: playerSymbols,
     }),
-    Effect.flatMap(() =>
-      Effect.async((cb) => {
-        process.stdin.on('keypress', (str, key) => {
-          let playerMoves: CurrentPosition = { x: 0, y: 0 };
-          if (str === '\u0003') {
-            process.exit();
-          } else {
-            switch (key.name) {
-              case 'up':
-                playerMoves = { x: -1, y: 0 };
-                break;
-              case 'down':
-                playerMoves = { x: 1, y: 0 };
-                break;
-              case 'left':
-                playerMoves = { x: 0, y: -1 };
-                break;
-              case 'right':
-                playerMoves = { x: 0, y: 1 };
-                break;
-            }
-            move({ playerMoves, ...state });
-          }
-        });
-      }),
-    ),
   );
+  return selected as string;
+});
 
-export const runPlayerModeMenu = pipe(
+export const gameModeOption = pipe(
   Effect.promise(() =>
     select({
-      message: 'Choose a player mode',
-      choices: ['Auto', 'Manual'],
+      message: 'Pick your gameplay mode:',
+      choices: ['Freedom', 'Guided'],
     }),
   ),
   Effect.map((selected) => selected as string),
-
 );
+
+export class MazeMenu extends Effect.Service<MazeMenu>()('MazeMenu', {
+  dependencies: [MazeAPI.Default],
+  effect: pipe(
+    Effect.all({
+      player: selectPlayerCharacter,
+      maze: getMaze,
+      gameMode: gameModeOption,
+    }),
+    Effect.map(({ player, maze, gameMode }) =>
+      Schema.decodeUnknownSync(MazeGameDataSchema)({
+        player,
+        maze,
+        gameMode,
+      }),
+    ),
+    Effect.tap((mazeData) =>
+      Effect.gen(function* () {
+        const maze = yield* MazeDataState;
+        yield* Ref.set(maze, mazeData);
+      }),
+  ),
+)}) {}

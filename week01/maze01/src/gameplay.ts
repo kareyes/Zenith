@@ -154,10 +154,10 @@ const checkFinalPosition = (state: GameState) =>
     Effect.succeed(state),
     Effect.bind('position', () => Ref.get(state.currentPosition)),
     Effect.bind('mazeState', () => Ref.get(state.maze)),
-    Effect.map(({ position, mazeState }) => {
+    Effect.map(({ position, mazeState:{maze} }) => {
       if (
-        position.x === mazeState.numRows - 1 &&
-        position.y === mazeState.numCols - 1
+        position.x === maze.numRows - 1 &&
+        position.y === maze.numCols - 1
       ) {
         return Effect.succeed('Game Over');
       }

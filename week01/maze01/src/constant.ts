@@ -1,7 +1,9 @@
-import { Config, Context, Effect, pipe, Ref, Schema } from 'effect';
-import { CurrentPosition, Maze, MazeMetaArray, MazeSchema } from './types';
+import { Context, Effect, Ref } from 'effect';
+import {
+  CurrentPosition,
+  MazeGameData,
+} from './types';
 import { HOST, PORT } from '../config';
-import { ChannelTypeId } from 'effect/Channel';
 
 export class JSONError {
   readonly _tag = 'JSONError';
@@ -23,40 +25,21 @@ export class GamePlayError {
 }
 
 
-export class DBMazeClient extends Context.Tag('DBMazeClientService')<
-  DBMazeClient,
-  {
-    getbyId(maze_id: string): Effect.Effect<Maze, DatabaseError>;
-    getAllMazeId(): Effect.Effect<MazeMetaArray, DatabaseError>;
-  }
->() {}
-
-export class PlayerState {
-  player: Effect.Effect<string>;
-  constructor(private value: Ref.Ref<string>) {
-    this.player = Ref.get(this.value);
-  }
-}
-
-export class MazeState extends Context.Tag('MazeState')<
-  MazeState,
-  Ref.Ref<Maze>
->() {}
-
 export class CurrentPositionState extends Context.Tag('CurrentPositionState')<
   CurrentPositionState,
   Ref.Ref<CurrentPosition>
 >() {}
 
-export class PlayerModeState extends Context.Tag('PlayerModeState')<
-PlayerModeState,
-  Ref.Ref<string>
+
+export class MazeDataState extends Context.Tag('MazeDataState')<
+MazeDataState,
+  Ref.Ref<MazeGameData>
 >() {}
 
-export const GET_SELECTED_MAZE = "/maze/:maze_id";
-export const GET_ALL_MAZE = "/maze";
-export const GET_ALL_MAZE_METADATA = "/maze/metadata";
-export const UPDATE_SELECTED_MAZE = "/maze/update/:maze_id";
+export const GET_SELECTED_MAZE = '/maze/:maze_id';
+export const GET_ALL_MAZE = '/maze';
+export const GET_ALL_MAZE_METADATA = '/maze/metadata';
+export const UPDATE_SELECTED_MAZE = '/maze/update/:maze_id';
 
 export const API_URL = Effect.gen(function* (_) {
   const host = yield* _(HOST);
@@ -64,45 +47,60 @@ export const API_URL = Effect.gen(function* (_) {
   return `http://${host}:${port}`;
 });
 
-
-
-
 export const directions: CurrentPosition[] = [
-  { x: 0, y: 1 },  // right
-  { x: 1, y: 0 },  // down
+  { x: 0, y: 1 }, // right
+  { x: 1, y: 0 }, // down
   { x: 0, y: -1 }, // left
   { x: -1, y: 0 }, // up
 ];
 
-export const mockMaze: Maze = {
-  maze_id: '1',
-  mazeName: 'Test Maze',
-  created_at: new Date().toISOString(),
-  numCols: 1,
-  numRows: 1,
-  grid: [
-    {
-      vertical: [true, false, true, false, true],
-      horizontal: [false, true, false, true, false],
-    },
-  ],
+
+export const RawData:MazeGameData = {
+  player: '',
+  maze: {
+    maze_id: '',
+    mazeName: '',
+    created_at: '',
+    numCols: 0,
+    numRows: 0,
+    grid: [{
+      vertical: [false, false, false, false, false],
+      horizontal: [false, false, false, false, false],
+    }],
+  },
+  gameMode: '',
 };
 
-export const initialStateMaze = Ref.make(mockMaze);
 
-const symbols = [
-  { name: 'Face', code: '\u{1F600}', output: '😁' },
-  { name: 'Heart', code: '\u{2764}', output: '❤' },
-  { name: 'Star', code: '\u{2B50}', output: '⭐' },
-  { name: 'Dog', code: '\u{1F436}', output: '🐶' },
-  { name: 'Cat', code: '\u{1F431}', output: '🐱' },
-  { name: 'Mouse', code: '\u{1F42D}', output: '🐭' },
-  { name: 'Cow', code: '\u{1F42E}', output: '🐮' },
-  { name: 'Tiger', code: '\u{1F42F}', output: '🐯' },
-  { name: 'Rabbit', code: '\u{1F430}', output: '🐰' },
-  { name: 'Fox', code: '\u{1F98A}', output: '🦊' },
-  { name: 'Bear', code: '\u{1F43B}', output: '🐻' },
-  { name: 'Panda', code: '\u{1F43C}', output: '🐼' },
-  { name: 'Koala', code: '\u{1F428}', output: '🐨' },
+export const playerSymbols = [
+  {
+    name: '🐶 - Brian Griffin',
+    value: '\u{1F436}',
+    description:
+      'Has average agility, often displaying quick reflexes in comedic situations but not particularly athletic.',
+  },
+  {
+    name: '🐱 - Pusheen',
+    value: '\u{1F431}',
+    description:
+      'A cute, chubby cat with limited agility, often depicted as more playful and relaxed than physically nimble.',
+  },
+  {
+    name: '🐭 - Jerry',
+    value: '\u{1F42D}',
+    description:
+      'Jerry is highly agile, swiftly outmaneuvering Tom with quick reflexes and clever tricks.',
+  },
+  {
+    name: '🐼 - Pan-Pan',
+    value: '\u{1F43C}',
+    description:
+      'Playful and energetic character with surprising agility, often darting around with quick movements.',
+  },
+  {
+    name: '🐰 - Snowball',
+    value: '\u{1F430}',
+    description:
+      'Snowball is incredibly agile, darting swiftly and gracefully to evade attacks and outmaneuver opponents.',
+  },
 ];
-

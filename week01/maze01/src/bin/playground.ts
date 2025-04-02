@@ -5,8 +5,14 @@
 // import { E } from 'vitest/dist/chunks/reporters.6vxQttCV';
 // import { run } from 'effect/Schedule';
 
-import { Effect, pipe, Schedule } from "effect";
-import { MazeAPI } from "../apiServices";
+import { Effect, flow, Layer, pipe, Ref, Schedule, Schema } from 'effect';
+import { MazeAPI } from '../apiServices';
+import { MazeMenu } from '../menu';
+import { E } from 'vitest/dist/chunks/reporters.6vxQttCV';
+import { MazeDataState, RawData } from '../constant';
+import { gameStart } from '../maze';
+import {fastify, FastifyInstance } from 'fastify';
+import { PORT } from '../../config';
 
 // import { Console, Context, Effect, pipe, Ref, Schema } from "effect";
 // import { CurrentPosition, GridSchema, Maze } from "./types";
@@ -153,7 +159,6 @@ import { MazeAPI } from "../apiServices";
 
 // // Effect.runPromise(runn).then((res) => console.log(res));
 
-
 // import { Effect, pipe, Ref } from "effect"
 
 // class Counter {
@@ -196,7 +201,6 @@ import { MazeAPI } from "../apiServices";
 // );
 
 // Effect.runPromise(program)
-
 
 // import { Effect, Context, Ref, pipe } from "effect"
 
@@ -257,7 +261,6 @@ import { MazeAPI } from "../apiServices";
 // // Run the program and observe the output
 // Effect.runPromise(runnable)
 
-
 // const MazeMetaSchema = Schema.Struct({
 //   maze_id: Schema.String,
 //   mazeName: Schema.String,
@@ -265,7 +268,6 @@ import { MazeAPI } from "../apiServices";
 // });
 
 // type MazeMeta = typeof MazeMetaSchema.Type;
-
 
 // const MazeSchema =
 //   Schema.Struct({
@@ -280,10 +282,9 @@ import { MazeAPI } from "../apiServices";
 //     numRows: Schema.Number,
 //     grid: Schema.String,
 //   });
-  
+
 //   type Rawmaze = typeof RawMazeSchema.Type;
 //   const testMeta = Schema.Union(MazeSchema, MazeMetaSchema)
-
 
 //   const RespMazeSchema = Schema.transform(
 //   RawMazeSchema,
@@ -310,7 +311,6 @@ import { MazeAPI } from "../apiServices";
 //   ]),
 // };
 
-
 // const rawMaze1 = {
 //   numCols: 5,
 //   numRows: 5,
@@ -323,34 +323,28 @@ import { MazeAPI } from "../apiServices";
 // const decodedMaze = Schema.encodeUnknownSync(RespMazeSchema)(rawMaze1);
 // console.log(decodedMaze);
 
+// const teee = Schema.decodeUnknownSync(testMeta)({ maze_id: '1', mazeName: 'maze', created_at: '2021-09-09' , numCols: 2, numRows: 2, grid: [{ vertical: [true, false], horizontal: [true, false] }]});
 
-
-
-
-  // const teee = Schema.decodeUnknownSync(testMeta)({ maze_id: '1', mazeName: 'maze', created_at: '2021-09-09' , numCols: 2, numRows: 2, grid: [{ vertical: [true, false], horizontal: [true, false] }]});
-
-
-  // console.log(teee);
-
+// console.log(teee);
 
 //   const subprogram1 = Effect.gen(function* () {
 //       const state = yield* MyState
 //       yield* Ref.update(state, (n) => "hello")
 //     })
-  
+
 //     const subprogram3 = Effect.gen(function* () {
 //       const state = yield* MyState
 //       const value = yield* Ref.get(state)
 //       console.log(`MyState has a value of ${value}.`)
 //     })
-  
+
 //   const program = Effect.gen(function* () {
 //       yield* subprogram1
 //       yield* subprogram3
 //     })
-  
+
 //   const currentMazeEffect = Ref.make("maze")
-  
+
 //   // const runnable = currentMazeEffect.pipe(
 //   //     Effect.flatMap((currentMaze) =>
 //   //         program.pipe(
@@ -365,12 +359,11 @@ import { MazeAPI } from "../apiServices";
 
 // // Run the program and observe the output
 // Effect.runPromise(runnable)
-  
+
 //   Effect.runPromise(runnable).then(console.log).catch(console.error);
 
-
-// // 
-  // import { Effect, Context, Ref } from "effect"
+// //
+// import { Effect, Context, Ref } from "effect"
 
 // Create a Tag for our state
 // class MyState extends Context.Tag("MyState")<
@@ -417,12 +410,9 @@ import { MazeAPI } from "../apiServices";
 // // Run the program and observe the output
 // Effect.runPromise(runnable)
 
-
 // const make = Effect.andThen(Ref.make({ x: 0, y: 0 }), (value) => new PositionState(value))
 
-
 // const refPos = new PositionState(Effect.runSync(Ref.make({ x: 0, y: 0 })));
-
 
 // const posstate: Ref.Ref<CurrentPosition> = Effect.runSync(Ref.make({ x: 0, y: 0 }));
 
@@ -463,13 +453,12 @@ import { MazeAPI } from "../apiServices";
 
 // Effect.runPromise(prog)
 
-
 // const sub = pipe(
 //   make,
 //   Effect.flatMap((state) =>
 //     pipe(
 //       state.get,
-//       Effect.flatMap((position) => 
+//       Effect.flatMap((position) =>
 //         pipe(
 //           Effect.sync(() => console.log("position", position)),
 //           Effect.zipRight(state.update({ x: 1, y: 1 })),
@@ -486,7 +475,7 @@ import { MazeAPI } from "../apiServices";
 //   Effect.flatMap((state) =>
 //     pipe(
 //       state.get,
-//       Effect.flatMap((position) => 
+//       Effect.flatMap((position) =>
 //         pipe(
 //           Effect.sync(() => console.log("position", position)),
 //           Effect.zipRight(state.update({ x: 2, y: 2 })),
@@ -531,13 +520,13 @@ import { MazeAPI } from "../apiServices";
 // // Example function to insert symbols using Unicode escape sequences
 // function insertSymbolUsingUnicodeEscapeSequence(unicodeEscapeSequence: string): string {
 //   return unicodeEscapeSequence;
-// } 
+// }
 //  console.log(insertSymbolUsingUnicodeEscapeSequence('\u{1F600}')); // Output: 😁
 
 // // Example usage with Unicode escape sequences
-// const symbol1 = insertSymbolUsingUnicodeEscapeSequence('\u{1F600}'); // 
+// const symbol1 = insertSymbolUsingUnicodeEscapeSequence('\u{1F600}'); //
 // //  😁
-// console.log(symbol1); // Output: 
+// console.log(symbol1); // Output:
 // //  😁
 // const symbols = [
 //   { name: 'Grinning Face', code: '\u{1F600}', output: '😁' },
@@ -548,7 +537,6 @@ import { MazeAPI } from "../apiServices";
 // ];
 
 // // Display the symbols
- 
 
 // symbols.forEach(symbol => {
 //   console.log(`${symbol.name}: ${symbol.code} -> ${symbol.output}`);
@@ -570,7 +558,6 @@ import { MazeAPI } from "../apiServices";
 //   console.log(`${symbol.name}: ${symbol.code} -> ${symbol.output}`);
 // });
 
-
 // const celebrationSymbols = [
 //   { name: 'Party Popper', code: '\u{1F389}', output: '🎉' },
 //   { name: 'Confetti Ball', code: '\u{1F38A}', output: '🎊' },
@@ -586,17 +573,117 @@ import { MazeAPI } from "../apiServices";
 
 // celebrationSymbols.forEach(symbol => {
 //   console.log(`${symbol.name}: ${symbol.code} -> ${symbol.output}`);
-// });
-const jsonResponse = (response: Response) =>
-  Effect.tryPromise(() => response.json());
+// // });
+// const jsonResponse = (response: Response) =>
+//   Effect.tryPromise(() => response.json());
 
-const maze = pipe(
-  Effect.gen(function* () {
-    const maze = yield* MazeAPI
-    const mazeId = yield* maze.getAllMaze() 
-    console.log(mazeId)
-  }),
-  Effect.provide(MazeAPI.Default)
-)
+// const maze = pipe(
+//   Effect.gen(function* () {
+//     const maze = yield* MazeAPI
+//     const mazeId = yield* maze.getAllMaze()
+//     console.log(mazeId)
+//   }),
+//   Effect.provide(MazeAPI.Default)
+// )
 
-Effect.runPromise(maze).then(console.log).catch(console.error)
+// Effect.runPromise(maze).then(console.log).catch(console.error)
+
+const program = pipe(
+  MazeMenu,
+  Effect.zipRight(gameStart)
+);
+
+Effect.runPromise(
+  program.pipe(
+    Effect.provide(MazeMenu.Default),
+    Effect.provideServiceEffect(MazeDataState, Ref.make(RawData))
+  )
+);
+
+
+
+
+
+// export class Pokemon extends Schema.Class<Pokemon>("Pokemon")({
+//   id: Schema.Number,
+//   order: Schema.Number,
+//   name: Schema.String,
+//   height: Schema.Number,
+//   weight: Schema.Number,
+//   cries: Schema.Struct({
+//     latest: Schema.String,
+//     legacy: Schema.String,
+//   }),
+// }) {}
+
+// import {
+//   FetchHttpClient,
+//   HttpClient,
+//   HttpClientRequest,
+//   HttpClientResponse,
+// } from "@effect/platform";
+// // import { Effect, flow } from "effect";
+// // import { Pokemon } from "../schemas";
+
+// export const main = Effect.gen(function* () {
+//   const baseClient = yield* HttpClient.HttpClient;
+//   const pokeApiClient = baseClient.pipe(
+//     HttpClient.mapRequest(
+//       flow(
+//         HttpClientRequest.acceptJson,
+//         HttpClientRequest.prependUrl("https://pokeapi.co/api/v2")
+//       )
+//     )
+//   );
+
+//   return yield* pokeApiClient.get("/pokemon/squirtle");
+// }).pipe(
+//   Effect.flatMap(HttpClientResponse.schemaBodyJson(Pokemon)),
+//   Effect.scoped,
+//   Effect.provide(FetchHttpClient.layer)
+// );
+
+// Effect.runPromise(main).then(console.log).catch(console.error);
+
+
+// import cors from '@fastify/cors';
+
+// class HttpServer extends Context.Tag("HttpServer")<
+//   HttpServer,
+//   ReturnType<FastifyInstance>
+// >() {
+//   static readonly Live = Layer.sync(HttpServer, () => fastify());
+// }
+
+// const createServer = Layer.effect(
+//   HttpServer,
+//   Effect.gen(function* (_) {
+//     const server = yield* _(HttpServer);
+//     server.register(cors, {
+//       origin: '*',
+//     });
+//     yield* _(apis(server));
+//     return server;
+//   })
+// );
+
+// const ListenLive = Layer.effectDiscard(
+//   Effect.gen(function* (_) {
+//     const port = yield* PORT
+//     const server = fastify();
+//      server.register(cors, {
+//         origin: '*',
+//       });
+//     yield* _(
+//       Effect.sync(() =>
+//         server.listen({ port }, (err, address) => {
+//           if (err) {
+//             console.error(err);
+//             process.exit(1);
+//           }
+//           console.log(`Server listening at ${address}`);
+//         })
+//       )
+//     );
+//   })
+// );

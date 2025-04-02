@@ -1,30 +1,12 @@
-import { Effect, Ref} from 'effect';
-import { getMaze,  runPlayerModeMenu } from './menu';
-import { CurrentPositionState, MazeState, mockMaze, PlayerModeState,  } from './constant';
-import { BuildMazeApi } from './builder';
-import { initializeMaze } from './maze';
+import { Effect, pipe, Ref } from 'effect';
+import { MazeMenu } from './menu';
+import { MazeDataState, RawData } from './constant';
+import { gameStart } from './maze';
 
-const main = Effect.gen(function* () {
-  const maze = yield* getMaze;
-  const state = yield* MazeState;
-  const playerMode = yield* runPlayerModeMenu
-  const playModeState = yield* PlayerModeState;
-
-  yield* Ref.update(playModeState, () => playerMode);
-  yield* Ref.update(state, () => maze);
-});
-
-const initialStateMaze = Effect.succeed(mockMaze).pipe(
-  Effect.flatMap((maze) => Ref.make(maze)),
-);
-
+const main = pipe(MazeMenu, Effect.zipRight(gameStart));
 
 main.pipe(
-  Effect.flatMap(() => initializeMaze)
-).pipe(
-  Effect.provideServiceEffect(CurrentPositionState, Ref.make({x: 0, y: 0})),
-  Effect.provideServiceEffect(MazeState, initialStateMaze),
-  Effect.provideService(BuildMazeApi, BuildMazeApi.Live),
-  Effect.provideServiceEffect(PlayerModeState, Ref.make('Auto')),
+  Effect.provide(MazeMenu.Default),
+  Effect.provideServiceEffect(MazeDataState, Ref.make(RawData)),
   Effect.runPromise,
 );

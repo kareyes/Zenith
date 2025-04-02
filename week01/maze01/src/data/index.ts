@@ -1,69 +1,84 @@
-import { DatabaseSync, StatementSync, SupportedValueType } from 'node:sqlite';
-import { Effect, Context, pipe, Layer, Data } from 'effect';
-import { E } from 'vitest/dist/chunks/reporters.6vxQttCV';
-import { DatabaseError } from '../constant';
+import { fastify, FastifyInstance } from 'fastify';
+import cors from '@fastify/cors';
+import {
+  ERROR_CODE,
+  GET_ALL_MAZE_METADATA,
+  GET_SELECTED_MAZE,
+} from './constant';
+import { Effect, pipe } from 'effect';
+import { MazeDBServices } from './api/services';
+import { PORT } from '../../config';
 
-const instancesMap: Map<string, DatabaseSync> = new Map();
+const apis = (server: FastifyInstance) =>
+  Effect.sync(() => {
+    server.get('/', async (_, reply) => {
+      reply.send('Hello World');
+    });
 
-// export interface DatabaseService {
-//   getDB: Effect.Effect<unknown, never, DatabaseSync>;
-//   closeAll: Effect.Effect<unknown, never, void>;
-//   run: (
-//     sql: string,
-//     params: SupportedValueType[],
-//   ) => Effect.Effect<unknown, never, void>;
-//   get: <T>(
-//     sql: string,
-//     params: SupportedValueType[],
-//   ) => Effect.Effect<unknown, never, T>;
-//   all: <T>(
-//     sql: string,
-//     params: SupportedValueType[],
-//   ) => Effect.Effect<unknown, never, T[]>;
-// }
+    server.get(GET_SELECTED_MAZE, (request, reply) => {
+      const { maze_id } = request.params as { maze_id: string };
+      Effect.runPromise(
+        pipe(
+          Effect.gen(function* (_) {
+            const mazeApi = yield* _(MazeDBServices);
+            const maze = yield* _(mazeApi.getbyId(maze_id));
+            return maze;
+          }),
+          Effect.provide(MazeDBServices.Default),
+        ),
+      )
+        .then((res) => {
+          reply.send({ status: 'success', data: res });
+        })
+        .catch(() => {
+          reply
+            .status(ERROR_CODE.INTERNAL_SERVER_ERROR)
+            .send({ status: 'error', error: 'Failed to fetch maze' });
+        });
+    });
 
-const DBMaze = `${__dirname}/maze.db`;
-const DBMazeClient = Effect.succeed(() => {
-    const client = new DatabaseSync(DBMaze);
-    return client
+    server.get(GET_ALL_MAZE_METADATA, (_, reply) => {
+      Effect.runPromise(
+        pipe(
+          Effect.gen(function* (_) {
+            const mazeApi = yield* _(MazeDBServices);
+            const maze = yield* _(mazeApi.getMetadata());
+            return maze;
+          }),
+          Effect.provide(MazeDBServices.Default),
+        ),
+      )
+        .then((res) => {
+          reply.send({ status: 'success', data: res });
+        })
+        .catch(() => {
+          reply
+            .status(ERROR_CODE.INTERNAL_SERVER_ERROR)
+            .send({ status: 'error', error: 'Failed to fetch maze' });
+        });
+    });
+  });
 
+const initializeServer = Effect.gen(function* (_) {
+  const Ports = yield* PORT;
+  const server = fastify();
+  server.register(cors, {
+    origin: '*',
+  });
+  server.listen({ port: Ports }, (err, address) => {
+    if (err) {
+      console.error(err);
+      process.exit(1);
+    }
+    console.log(`Server listening at ${address}`);
+  });
+  return server;
 });
 
-export class DatabaseService extends Effect.Service<DatabaseService>()(
-  'DatabaseService',
-  {
-    effect: Effect.gen(function* () {
-      return {
-        run: (sql: string, params: SupportedValueType[]) =>
-          pipe(
-            DBMazeClient,
-            Effect.map((db) => {
-              const stmt = db().prepare(sql);
-              stmt.run(...params);
-            }),
-            Effect.catchAll((e) => Effect.fail(new DatabaseError(e))),
-          ),
-        get: <T>(sql: string, params: SupportedValueType[]) =>
-          pipe(
-            DBMazeClient,
-            Effect.map((db) => {
-              const stmt = db().prepare(sql);
-                  return stmt.get(...params
-              ) as T;;
-            }),
-            Effect.catchAll((e) => Effect.fail(new DatabaseError(e))),
-          ),
-        all: <T>(sql: string, params: SupportedValueType[]) =>
-          pipe(
-            DBMazeClient,
-            Effect.map((db) => {
-              const stmt = db().prepare(sql);
-              return stmt.all(...params) as T[];
-            }),
-            Effect.catchAll((e) => Effect.fail(new DatabaseError(e))),
-          ),
-      };
-    }),
-  },
-) {}
+
+initializeServer.pipe(
+  Effect.flatMap((server) => apis(server)),
+  Effect.runPromise
+);
+
 

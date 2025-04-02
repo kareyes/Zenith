@@ -22,6 +22,8 @@ export const MazeMetaSchema = Schema.Struct({
 export const MetaArraySchema = Schema.Array(MazeMetaSchema);
 
 export type MazeMetaArray = typeof MetaArraySchema.Type;
+// export interface MazeMetaArray extends Schema.Schema.Type<typeof MetaArraySchema> {}
+
 export type MazeMeta = typeof MazeMetaSchema.Type;
 
 export const MazeSchema = Schema.Struct({
@@ -76,7 +78,7 @@ export const PlayMovementSchema = Schema.Struct({
 });
 
 export type GameState = {
-  maze: Ref.Ref<Maze>,
+  maze: Ref.Ref<MazeGameData>,
   currentPosition: Ref.Ref<CurrentPosition>,
 }
 
@@ -91,4 +93,10 @@ export type GamePlay = typeof GamePlaySchema.Type;
 
 export type CurrentPosition = typeof CurrentPositionSchema.Type;
 
+export const MazeGameDataSchema = Schema.Struct({
+  maze: MazeSchema,
+  player: Schema.String,
+  gameMode: Schema.String,
+});
+export type MazeGameData = typeof MazeGameDataSchema.Type;
 
