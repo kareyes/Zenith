@@ -5,13 +5,23 @@
 // import { E } from 'vitest/dist/chunks/reporters.6vxQttCV';
 // import { run } from 'effect/Schedule';
 
-import { Effect, flow, Layer, pipe, Ref, Schedule, Schema } from 'effect';
+import {
+  Context,
+  Effect,
+  flow,
+  Layer,
+  ManagedRuntime,
+  pipe,
+  Ref,
+  Schedule,
+  Schema,
+} from 'effect';
 import { MazeAPI } from '../apiServices';
 import { MazeMenu } from '../menu';
-import { E } from 'vitest/dist/chunks/reporters.6vxQttCV';
-import { MazeDataState, RawData } from '../constant';
+import { E, H } from 'vitest/dist/chunks/reporters.6vxQttCV';
+import { API_URL, MazeDataState, RawData } from '../constant';
 import { gameStart } from '../maze';
-import {fastify, FastifyInstance } from 'fastify';
+import { fastify, FastifyInstance } from 'fastify';
 import { PORT } from '../../config';
 
 // import { Console, Context, Effect, pipe, Ref, Schema } from "effect";
@@ -588,102 +598,80 @@ import { PORT } from '../../config';
 
 // Effect.runPromise(maze).then(console.log).catch(console.error)
 
-const program = pipe(
-  MazeMenu,
-  Effect.zipRight(gameStart)
+// const program = pipe(MazeMenu, Effect.zipRight(gameStart));
+
+// Effect.runPromise(
+//   program.pipe(
+//     Effect.provide(MazeMenu.Default),
+//     Effect.provideServiceEffect(MazeDataState, Ref.make(RawData)),
+//   ),
+// );
+
+export class Pokemon extends Schema.Class<Pokemon>("Pokemon")({
+  id: Schema.Number,
+  order: Schema.Number,
+  name: Schema.String,
+  height: Schema.Number,
+  weight: Schema.Number,
+  cries: Schema.Struct({
+    latest: Schema.String,
+    legacy: Schema.String,
+  }),
+}) {}
+
+export type Pokemona = typeof Pokemon.Type;
+
+
+export const ErrorResponse = Schema.Struct({
+  status: Schema.String,
+  error: Schema.String,
+}) 
+
+
+
+const Pok = Schema.Struct({
+  id: Schema.Number,
+  order: Schema.Number,
+  name: Schema.String,
+  height: Schema.Number,
+  weight: Schema.Number,
+  cries: Schema.Struct({
+    latest: Schema.String,
+    legacy: Schema.String,
+  }),
+})
+
+import {
+  FetchHttpClient,
+  HttpClient,
+  HttpClientRequest,
+  HttpClientResponse,
+} from "@effect/platform";
+import { GET_ALL_MAZE_METADATA } from '../data/constant';
+import { MetaArraySchema } from '../types';
+// import { Effect, flow } from "effect";
+// import { Pokemon } from "../schemas";
+
+export const main = Effect.gen(function* () {
+    const BASE_URL = yield* API_URL;
+  const baseClient = yield* HttpClient.HttpClient;
+  const pokeApiClient = baseClient.pipe(
+    HttpClient.mapRequest(
+      flow(
+        HttpClientRequest.acceptJson,
+        HttpClientRequest.prependUrl(BASE_URL)
+      )
+    )
+  );
+
+  return yield* pokeApiClient.get(`${GET_ALL_MAZE_METADATA}s`)
+}).pipe(
+  Effect.flatMap(HttpClientResponse.schemaBodyJson(MetaArraySchema)),
+  Effect.catchAll((error) => {
+    return Effect.succeed(error);
+  }),
+  Effect.scoped,
+  Effect.provide(FetchHttpClient.layer)
 );
 
-Effect.runPromise(
-  program.pipe(
-    Effect.provide(MazeMenu.Default),
-    Effect.provideServiceEffect(MazeDataState, Ref.make(RawData))
-  )
-);
-
-
-
-
-
-// export class Pokemon extends Schema.Class<Pokemon>("Pokemon")({
-//   id: Schema.Number,
-//   order: Schema.Number,
-//   name: Schema.String,
-//   height: Schema.Number,
-//   weight: Schema.Number,
-//   cries: Schema.Struct({
-//     latest: Schema.String,
-//     legacy: Schema.String,
-//   }),
-// }) {}
-
-// import {
-//   FetchHttpClient,
-//   HttpClient,
-//   HttpClientRequest,
-//   HttpClientResponse,
-// } from "@effect/platform";
-// // import { Effect, flow } from "effect";
-// // import { Pokemon } from "../schemas";
-
-// export const main = Effect.gen(function* () {
-//   const baseClient = yield* HttpClient.HttpClient;
-//   const pokeApiClient = baseClient.pipe(
-//     HttpClient.mapRequest(
-//       flow(
-//         HttpClientRequest.acceptJson,
-//         HttpClientRequest.prependUrl("https://pokeapi.co/api/v2")
-//       )
-//     )
-//   );
-
-//   return yield* pokeApiClient.get("/pokemon/squirtle");
-// }).pipe(
-//   Effect.flatMap(HttpClientResponse.schemaBodyJson(Pokemon)),
-//   Effect.scoped,
-//   Effect.provide(FetchHttpClient.layer)
-// );
-
-// Effect.runPromise(main).then(console.log).catch(console.error);
-
-
-// import cors from '@fastify/cors';
-
-// class HttpServer extends Context.Tag("HttpServer")<
-//   HttpServer,
-//   ReturnType<FastifyInstance>
-// >() {
-//   static readonly Live = Layer.sync(HttpServer, () => fastify());
-// }
-
-// const createServer = Layer.effect(
-//   HttpServer,
-//   Effect.gen(function* (_) {
-//     const server = yield* _(HttpServer);
-//     server.register(cors, {
-//       origin: '*',
-//     });
-//     yield* _(apis(server));
-//     return server;
-//   })
-// );
-
-// const ListenLive = Layer.effectDiscard(
-//   Effect.gen(function* (_) {
-//     const port = yield* PORT
-//     const server = fastify();
-//      server.register(cors, {
-//         origin: '*',
-//       });
-//     yield* _(
-//       Effect.sync(() =>
-//         server.listen({ port }, (err, address) => {
-//           if (err) {
-//             console.error(err);
-//             process.exit(1);
-//           }
-//           console.log(`Server listening at ${address}`);
-//         })
-//       )
-//     );
-//   })
-// );
+Effect.runPromise(main).then(console.log).catch(console.error);

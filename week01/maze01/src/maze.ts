@@ -92,18 +92,6 @@ const finalizePosition = (state: GameState) =>
     }),
   );
 
-const drawMaze = (state: GameState) =>
-  pipe(
-    builder,
-    Effect.tap(() => clear()),
-    Effect.tap((mazeLayout) => console.log(mazeLayout.join(''))),
-    Effect.provideServiceEffect(MazeDataState, Effect.succeed(state.maze)),
-    Effect.provideServiceEffect(
-      CurrentPositionState,
-      Effect.succeed(state.currentPosition),
-    ),
-  );
-
 const listener = (state: GameState) =>
   pipe(
     Effect.sync(() => {
@@ -136,6 +124,18 @@ const listener = (state: GameState) =>
           }
         });
       }),
+    ),
+  );
+
+const drawMaze = (state: GameState) =>
+  pipe(
+    builder,
+    Effect.tap(() => clear()),
+    Effect.tap((mazeLayout) => console.log(mazeLayout.join(''))),
+    Effect.provideServiceEffect(MazeDataState, Effect.succeed(state.maze)),
+    Effect.provideServiceEffect(
+      CurrentPositionState,
+      Effect.succeed(state.currentPosition),
     ),
   );
 

@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@effect/platform": "^0.80.2",
+    "@effect/platform-bun": "^0.60.8",
     "@effect/sql": "^0.33.2",
     "@effect/sql-pg": "^0.34.2",
     "@fastify/cors": "^11.0.0",

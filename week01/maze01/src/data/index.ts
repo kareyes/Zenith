@@ -5,17 +5,54 @@ import {
   GET_ALL_MAZE_METADATA,
   GET_SELECTED_MAZE,
 } from './constant';
-import { Effect, pipe } from 'effect';
+import { Context, Effect, Layer, pipe } from 'effect';
 import { MazeDBServices } from './api/services';
 import { PORT } from '../../config';
+import { BunRuntime } from '@effect/platform-bun';
 
-const apis = (server: FastifyInstance) =>
-  Effect.sync(() => {
-    server.get('/', async (_, reply) => {
+class HttpServer extends Context.Tag('HttpServer')<
+  HttpServer,
+  FastifyInstance
+>() {
+  static readonly Live = Layer.effect(
+    HttpServer,
+    Effect.gen(function* (_) {
+      const server = fastify();
+      server.register(cors, {
+        origin: '*',
+      });
+      return server;
+    }),
+  );
+}
+
+const ListenLive = Layer.effectDiscard(
+  Effect.gen(function* (_) {
+    const port = yield* PORT;
+    const server = yield* _(HttpServer);
+    yield* _(
+      Effect.sync(() =>
+        server.listen({ port }, (err, address) => {
+          if (err) {
+            console.error(err);
+            process.exit(1);
+          }
+          console.log(`Server listening at ${address}`);
+        }),
+      ),
+    );
+  }),
+);
+
+export const serversLayer = Layer.effectDiscard(
+  Effect.gen(function* (_) {
+    const http = yield* _(HttpServer);
+
+    http.get('/', async (_, reply) => {
       reply.send('Hello World');
     });
 
-    server.get(GET_SELECTED_MAZE, (request, reply) => {
+    http.get(GET_SELECTED_MAZE, (request, reply) => {
       const { maze_id } = request.params as { maze_id: string };
       Effect.runPromise(
         pipe(
@@ -28,7 +65,7 @@ const apis = (server: FastifyInstance) =>
         ),
       )
         .then((res) => {
-          reply.send({ status: 'success', data: res });
+          reply.send( res);
         })
         .catch(() => {
           reply
@@ -37,7 +74,7 @@ const apis = (server: FastifyInstance) =>
         });
     });
 
-    server.get(GET_ALL_MAZE_METADATA, (_, reply) => {
+    http.get(GET_ALL_MAZE_METADATA, (_, reply) => {
       Effect.runPromise(
         pipe(
           Effect.gen(function* (_) {
@@ -49,7 +86,7 @@ const apis = (server: FastifyInstance) =>
         ),
       )
         .then((res) => {
-          reply.send({ status: 'success', data: res });
+          reply.send(res);
         })
         .catch(() => {
           reply
@@ -57,28 +94,12 @@ const apis = (server: FastifyInstance) =>
             .send({ status: 'error', error: 'Failed to fetch maze' });
         });
     });
-  });
-
-const initializeServer = Effect.gen(function* (_) {
-  const Ports = yield* PORT;
-  const server = fastify();
-  server.register(cors, {
-    origin: '*',
-  });
-  server.listen({ port: Ports }, (err, address) => {
-    if (err) {
-      console.error(err);
-      process.exit(1);
-    }
-    console.log(`Server listening at ${address}`);
-  });
-  return server;
-});
-
-
-initializeServer.pipe(
-  Effect.flatMap((server) => apis(server)),
-  Effect.runPromise
+  }),
 );
 
-
+pipe(
+  Layer.merge(serversLayer, ListenLive),
+  Layer.provide(HttpServer.Live),
+  Layer.launch,
+  BunRuntime.runMain,
+);

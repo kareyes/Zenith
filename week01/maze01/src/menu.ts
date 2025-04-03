@@ -7,7 +7,7 @@ import { MazeGameDataSchema } from './types';
 
 export const getMaze = Effect.gen(function* () {
   const mazeAPI = yield* MazeAPI;
-  const maze = yield* mazeAPI.getAllMaze();
+  const maze = yield*  mazeAPI.getDataMaze();
   const selected = yield* Effect.promise(() =>
     select({
       message: 'Choose your labyrinth tier:',
@@ -18,9 +18,15 @@ export const getMaze = Effect.gen(function* () {
       })),
     }),
   );
-  const mazeById = yield* mazeAPI.getMazeById(selected);
+  const mazeById = yield* mazeAPI.getMaze(selected);
   return mazeById;
-}).pipe(Effect.provide(MazeAPI.Default));
+}).pipe(
+  Effect.catchAll((error) => {
+    console.error('Error fetching maze:', error);
+    return Effect.succeed(error)
+  }),
+  Effect.provide(MazeAPI.Default));
+  
 
 export const selectPlayerCharacter = Effect.gen(function* () {
   const selected = yield* Effect.promise(() =>
